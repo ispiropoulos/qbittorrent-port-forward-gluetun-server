@@ -12,9 +12,9 @@ if [ ! "$port_number" ] || [ "$port_number" = "0" ]; then
     exit 1
 fi
 
-curl --fail --silent --show-error --cookie-jar /tmp/cookies.txt --cookie /tmp/cookies.txt --header "Referer: $qbt_addr" --data-urlencode "username=$qbt_username" --data-urlencode "password=$qbt_password" $qbt_addr/api/v2/auth/login 1> /dev/null
+SID=`curl -i --silent --show-error --header "Referer: $qbt_addr" --data-urlencode "username=$qbt_username" --data-urlencode "password=$qbt_password" $qbt_addr/api/v2/auth/login | grep SID | awk '{ print $2 }' | sed 's/;//'`
 
-listen_port=$(curl --fail --silent --show-error --cookie-jar /tmp/cookies.txt --cookie /tmp/cookies.txt $qbt_addr/api/v2/app/preferences | jq '.listen_port')
+listen_port=$(curl --fail --silent --show-error --cookie "$SID" $qbt_addr/api/v2/app/preferences | jq '.listen_port')
 
 if [ ! "$listen_port" ]; then
     echo "Could not get current listen port, exiting..."
@@ -28,6 +28,6 @@ fi
 
 echo "Updating port to $port_number"
 
-curl --fail --silent --show-error --cookie-jar /tmp/cookies.txt --cookie /tmp/cookies.txt --data-urlencode "json={\"listen_port\": $port_number}"  $qbt_addr/api/v2/app/setPreferences
+curl --fail --silent --show-error --cookie "$SID" --data-urlencode "json={\"listen_port\": $port_number}"  $qbt_addr/api/v2/app/setPreferences
 
 echo "Successfully updated port"
